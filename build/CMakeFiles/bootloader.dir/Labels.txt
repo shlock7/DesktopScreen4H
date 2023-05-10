@@ -1,0 +1,13 @@
+# Target labels
+ bootloader
+# Source files and their labels
+/home/jsc/esp/DesktopScreenV4.0.2/build/CMakeFiles/bootloader
+/home/jsc/esp/DesktopScreenV4.0.2/build/CMakeFiles/bootloader.rule
+/home/jsc/esp/DesktopScreenV4.0.2/build/CMakeFiles/bootloader-complete.rule
+/home/jsc/esp/DesktopScreenV4.0.2/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
+/home/jsc/esp/DesktopScreenV4.0.2/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
+/home/jsc/esp/DesktopScreenV4.0.2/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
+/home/jsc/esp/DesktopScreenV4.0.2/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule
+/home/jsc/esp/DesktopScreenV4.0.2/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
+/home/jsc/esp/DesktopScreenV4.0.2/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
+/home/jsc/esp/DesktopScreenV4.0.2/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
