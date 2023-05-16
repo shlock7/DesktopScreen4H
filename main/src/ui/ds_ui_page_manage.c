@@ -48,12 +48,8 @@ void ds_ui_page_manage_send_event(TP_ACTION_E key,uint8_t touch_x,uint8_t touch_
 				evt.action = PAGE_TYPE_TOMATO;
 			}
 		}
-
-		// if(g_page_manage.now_show_page == PAGE_TYPE_WORD){
-		// 	evt.action = PAGE_CNTER_ADD;
-		// }
 	}
-	send_beep_event_from_isr(BEEP_SHORT_100MS);
+	send_beep_event_from_isr(BEEP_SHORT_100MS); // 蜂鸣器
 	xQueueSendFromISR(ui_event_queue, &evt, NULL);
 }
 

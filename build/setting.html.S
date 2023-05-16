@@ -1,4 +1,4 @@
-/* * Data converted from /home/jsc/esp/DesktopScreenV4.0.2/main/setting.html
+/* * Data converted from /home/jsc/esp/DesktopScreen4H/main/setting.html
  */
 .data
 .section .rodata.embedded

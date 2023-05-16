@@ -1,4 +1,4 @@
-/* * Data converted from /home/jsc/esp/DesktopScreenV4.0.2/main/server_root_cert_bilibili.pem
+/* * Data converted from /home/jsc/esp/DesktopScreen4H/main/server_root_cert_bilibili.pem
  * (null byte appended)
  */
 .data

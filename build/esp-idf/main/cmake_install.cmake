@@ -1,4 +1,4 @@
-# Install script for directory: /home/jsc/esp/DesktopScreenV4.0.2/main
+# Install script for directory: /home/jsc/esp/DesktopScreen4H/main
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

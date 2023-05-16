@@ -176,15 +176,14 @@ void set_tp_action_manage_stop_point(uint16_t x,uint16_t y){
 
 void check_tp_action(){
     g_system_data.tp_action_manage.status = 0;
+    // 创建一个指向TP_ACTION_MANAGE_T触摸动作管理结构体的指针用来存储当前已有的与触摸动作相关的数据
     TP_ACTION_MANAGE_T *m_manage = &g_system_data.tp_action_manage;
-    // if(abs(m_action_manage->tp_start_x - m_action_manage->tp_stop_x) > ){
 
-    // }
-    // ESP_LOGI(TAG,"timecount %d",m_manage->tp_interval_timecount);
     ESP_LOGI(TAG, "start %d %d stop %d %d",m_manage->tp_start_x,m_manage->tp_start_y,m_manage->tp_stop_x,m_manage->tp_stop_y);
     if(m_manage->tp_stop_x == 0 && m_manage->tp_stop_y == 0 && m_manage->tp_start_x !=0 && m_manage->tp_start_y !=0){
         ESP_LOGI(TAG,"action TP_ACTION_SHORT");
         g_system_data.tp_action_manage.tp_action = TP_ACTION_SHORT;
+        // 根据点击位置切换界面
         ds_ui_page_manage_send_event(g_system_data.tp_action_manage.tp_action,g_system_data.tp_action_manage.tp_start_x,g_system_data.tp_action_manage.tp_start_y);
         return;
     }

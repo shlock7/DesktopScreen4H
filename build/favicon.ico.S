@@ -1,4 +1,4 @@
-/* * Data converted from /home/jsc/esp/DesktopScreenV4.0.2/main/favicon.ico
+/* * Data converted from /home/jsc/esp/DesktopScreen4H/main/favicon.ico
  */
 .data
 .section .rodata.embedded

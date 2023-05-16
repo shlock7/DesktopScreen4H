@@ -24,12 +24,12 @@ TouchPoint_T gTPS;
 static void scan_ft6336()
 {
 	uint8_t i=0;
-	uint8_t sta = 0;
-	uint8_t buf[4] = {0};  
-	uint8_t gestid=0;
-	i2c_master_read_slave(0x02,&sta,1);//读取触摸点的状态  
+	uint8_t sta = 0; 		// 触摸点状态
+	uint8_t buf[4] = {0};	// 这里是获取四个字节，分别是xH、xL、yH、y
+	uint8_t gestid=0;		// 手势
+	i2c_master_read_slave(0x02,&sta,1);    // 读取寄存器状态(触摸点的状态)，读取的是个数！
     gTPS.touch_count=sta;	
-	i2c_master_read_slave(0x01,&gestid,1);//读取触摸点的状态	
+	i2c_master_read_slave(0x01,&gestid,1); // 读取触摸点的状态
  	if(sta & 0x0f)	//判断是否有触摸点按下，0x02寄存器的低4位表示有效触点个数
  	{
  		gTPS.touch_sta = ~(0xFF << (sta & 0x0F));	//~(0xFF << (sta & 0x0F))将点的个数转换为触摸点按下有效标志

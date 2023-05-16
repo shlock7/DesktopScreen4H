@@ -51,13 +51,13 @@ static void gpio_task_example(void* arg)
     for(;;) {
         if(xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
             printf("GPIO[%d] intr, val: %d\n", io_num, gpio_get_level(io_num));
-            if(io_num == GPIO_INPUT_IO_0){
-                set_tp_wackup_timeleft(60);
+            if(io_num == GPIO_INPUT_IO_0){  // 假如读取到缓冲区的数据，即GPIO口为T_INT(IO4)
+                set_tp_wackup_timeleft(60); // 设置睡眠倒计时10分钟
                 if(gpio_get_level(io_num) == 0){
-                    //TODO START COUNT 
+                    // 假如GPIO为低电平触发，则初始化触摸屏管理相关结构体中的唤醒标志位(1)
                     reset_tp_action_manage();
                 }else{
-                    //TODO STOP COUNT 
+                    // 如果为高电平则检查当前屏幕被触摸的方式
                     check_tp_action();
                 }
             }
@@ -66,30 +66,30 @@ static void gpio_task_example(void* arg)
 }
 
 void ds_touch_gpio_init(){
-    static bool has_init_isr = false;
+    static bool has_init_isr = false;  // 初始化中断标志位
     gpio_config_t io_conf;
     //disable interrupt
-    io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
+    io_conf.intr_type = GPIO_PIN_INTR_DISABLE;  // 关闭GPIO口中断模式
     //set as output mode
-    io_conf.mode = GPIO_MODE_OUTPUT;
+    io_conf.mode = GPIO_MODE_OUTPUT;    // 配置GPIO输出模式
     //bit mask of the pins that you want to set,e.g.GPIO18/19
-    io_conf.pin_bit_mask = GPIO_OUTPUT_PIN_SEL;
+    io_conf.pin_bit_mask = GPIO_OUTPUT_PIN_SEL;  // 设置管脚的位掩码
     //disable pull-down mode
-    io_conf.pull_down_en = 0;
+    io_conf.pull_down_en = 0;  // 关闭下拉模式
     //disable pull-up mode
-    io_conf.pull_up_en = 0;
+    io_conf.pull_up_en = 0;    // 关闭上拉模式
     //configure GPIO with the given settings
-    gpio_config(&io_conf);
+    gpio_config(&io_conf);  // io_conf结构体用来对TP的IO5口，也就是T_RST引脚进行配置
 
     //GPIO interrupt type : both rising and falling edge
-    io_conf.intr_type = GPIO_INTR_ANYEDGE;
+    io_conf.intr_type = GPIO_INTR_ANYEDGE; 
     //bit mask of the pins, use GPIO4/5 here
     io_conf.pin_bit_mask = GPIO_INPUT_PIN_SEL;
     //set as input mode    
     io_conf.mode = GPIO_MODE_INPUT;
     //enable pull-up mode
     io_conf.pull_up_en = 1;
-    gpio_config(&io_conf);
+    gpio_config(&io_conf);  // IO4口TP的T_INT引脚进行配置
 
     //change gpio intrrupt type for one pin
     // gpio_set_intr_type(GPIO_INPUT_IO_0, GPIO_INTR_NEGEDGE);
@@ -101,9 +101,9 @@ void ds_touch_gpio_init(){
         xTaskCreate(gpio_task_example, "gpio_task_example", 2048, NULL, 10, NULL);
 
         //install gpio isr service
-        gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
+        gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);  // 配置GPIO中断
         //hook isr handler for specific gpio pin
-        gpio_isr_handler_add(GPIO_INPUT_IO_0, gpio_isr_handler, (void*) GPIO_INPUT_IO_0);
+        gpio_isr_handler_add(GPIO_INPUT_IO_0, gpio_isr_handler, (void*) GPIO_INPUT_IO_0); // 配置GPIO中断后需要调用此函数添加对应的GPIO中断服务
     }
     has_init_isr = true;
 }
@@ -117,7 +117,7 @@ void ds_touch_gpio_isr_add(){
 }
 
 void ds_screen_gpio_init(){
-    gpio_config_t io_conf;
+    gpio_config_t io_conf;  // GPIO配置结构体
     //disable interrupt
     io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
     //set as output mode

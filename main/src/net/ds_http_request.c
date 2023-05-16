@@ -472,10 +472,8 @@ void ds_http_request_type(HTTP_REQUEST_TYPE_E type){
 }
 
 void ds_http_request_all(){
-    // ds_http_request_type(HTTP_GET_FANS);
     ds_http_request_type(HTTP_GET_WEATHER);
     ds_http_request_type(HTTP_GET_TIME);
-    // ds_http_request_type(HTTP_GET_FANS);
 }
 
 static void http_request_task(void *pvParameters)
