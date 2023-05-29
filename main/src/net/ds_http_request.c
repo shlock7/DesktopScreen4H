@@ -189,10 +189,10 @@ static void cjson_city_info(char *text)
 //事件回调
 static esp_err_t _http_time_event_handle(esp_http_client_event_t *evt)
 {
-    static char* output_buffer; // Buffer to store response of http request from event handler
-    static int output_len; // Stores number of bytes read
+    static char* output_buffer; // 存储事件处理器的hhtp请求响应缓冲区
+    static int output_len; // 存储读取的字节长度
     switch(evt->event_id) {
-        case HTTP_EVENT_ON_DATA://接收数据事件
+        case HTTP_EVENT_ON_DATA:  //在此处理HTTP请求返回的数据
             ESP_LOGI(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
             if (!esp_http_client_is_chunked_response(evt->client)) {
                 if (output_buffer == NULL) {
@@ -202,22 +202,23 @@ static esp_err_t _http_time_event_handle(esp_http_client_event_t *evt)
                         ESP_LOGE(TAG, "Failed to allocate memory for output buffer");
                         return ESP_FAIL;
                     }
-                }
+                } // 申请一个http长度的内存来保存数据
                 memcpy(output_buffer + output_len, evt->data, evt->data_len);
                 printf("%.*s\n", output_len, output_buffer);
+                // 截取有效json，并将时间信息更新到system data
                 cjson_time_info((char*)output_buffer);
                 output_len += evt->data_len;
             }
             break;
-        case HTTP_EVENT_ERROR:
+        case HTTP_EVENT_ERROR: //当执行过程中出现错误
             break;
-        case HTTP_EVENT_ON_CONNECTED:
+        case HTTP_EVENT_ON_CONNECTED: // 一旦 HTTP 连接到服务器，就不会执行任何数据交换
             break;
-        case HTTP_EVENT_HEADERS_SENT:
+        case HTTP_EVENT_HEADERS_SENT: // 将所有标头发送到服务器后发生此事件
             break;
-        case HTTP_EVENT_ON_HEADER:
+        case HTTP_EVENT_ON_HEADER:  // 在接收从服务器发送的每个标头时发生
             break;
-        case HTTP_EVENT_ON_FINISH:
+        case HTTP_EVENT_ON_FINISH: // 完成 HTTP 会话
             ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH");
             if (output_buffer != NULL) {
                 // Response is accumulated in output_buffer. Uncomment the below line to print the accumulated response
@@ -355,10 +356,10 @@ static esp_err_t _http_city_event_handle(esp_http_client_event_t *evt)
 void http_time_get(){
     //http client配置
     esp_http_client_config_t config = {
-        .method = HTTP_METHOD_GET, //get请求
+        .method = HTTP_METHOD_GET, //配置http的运行方式  get请求
         .url = "http://quan.suning.com/getSysTime.do",
-        .event_handler = _http_time_event_handle,//注册时间回调
-        .skip_cert_common_name_check = true,
+        .event_handler = _http_time_event_handle,// 事件句柄，注册事件回调函数
+        .skip_cert_common_name_check = true,  // 跳过服务器证书CN字段的任何验证
     };
 	esp_http_client_handle_t time_client = esp_http_client_init(&config);//初始化配置
 	esp_err_t err = esp_http_client_perform(time_client);//执行请求
@@ -480,25 +481,26 @@ static void http_request_task(void *pvParameters)
 {
     while(1) {
         HTTP_REQUEST_TYPE_E evt;
+        // 获取队列项目，此函数不能在中断中使用
         xQueueReceive(http_request_event_queue, &evt, portMAX_DELAY);
         ESP_LOGI(TAG, "http_get_task %d",evt);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
         switch (evt)
         {
-        case HTTP_GET_TIME:
-            http_time_get();
-            break;
-        case HTTP_GET_WEATHER:
-            http_weather_get();
-            break;
-        case HTTP_GET_FANS:
-            // http_fans_get();
-            break;
-        case HTTP_GET_CITY:
-            http_city_get();
-            break;
-        default:
-            break;
+            case HTTP_GET_TIME:
+                http_time_get();
+                break;
+            case HTTP_GET_WEATHER:
+                http_weather_get();
+                break;
+            case HTTP_GET_FANS:
+                // http_fans_get();
+                break;
+            case HTTP_GET_CITY:
+                http_city_get();
+                break;
+            default:
+                break;
         }
         vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
@@ -506,6 +508,7 @@ static void http_request_task(void *pvParameters)
 
 void ds_http_request_init(void)
 {
+    // 创建大小为10个项目的队列，每个项目占用的空间为HTTP_REQUEST_TYPE_E枚举的内存大小
 	http_request_event_queue = xQueueCreate(10, sizeof(HTTP_REQUEST_TYPE_E));
     xTaskCreate(&http_request_task, "http_request_task", 4096, NULL, 5, NULL);
 }

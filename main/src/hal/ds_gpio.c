@@ -16,9 +16,13 @@
  * GPIO5: output
  * GPIO4:  input, pulled up, interrupt from rising edge 
  */
-
+//定义IO口，查硬件图
 #define GPIO_OUTPUT_IO_0    5
 #define GPIO_OUTPUT_PIN_SEL  ((1ULL<<GPIO_OUTPUT_IO_0))
+/*这个宏定义表示一个GPIO输出引脚的掩码
+  使用位运算符将1左移GPIO_OUTPUT_IO_0的值所表示的位数
+  然后使用ULL（无符号长长整型）将结果转换为64位无符号整数
+  这样就创建了一个只有GPIO_OUTPUT_IO_0引脚位置上为1，其他位都为0的掩码*/
 #define GPIO_INPUT_IO_0     4
 #define GPIO_INPUT_PIN_SEL  ((1ULL<<GPIO_INPUT_IO_0))
 #define ESP_INTR_FLAG_DEFAULT 0
@@ -38,7 +42,11 @@
 
 
 static xQueueHandle gpio_evt_queue = NULL;
-
+/*
+定义了一个处理GPIO中断的函数，当发生中断时
+它将中断所涉及的GPIO引脚编号（通过参数传递）发送到消息队列gpio_evt_queue中
+这样，其他部分的代码可以从该队列中接收并处理GPIO中断事件
+*/
 static void IRAM_ATTR gpio_isr_handler(void* arg)
 {
     uint32_t gpio_num = (uint32_t) arg;
@@ -65,6 +73,7 @@ static void gpio_task_example(void* arg)
     }
 }
 
+//触摸屏GPIO口初始化
 void ds_touch_gpio_init(){
     static bool has_init_isr = false;  // 初始化中断标志位
     gpio_config_t io_conf;
@@ -101,8 +110,19 @@ void ds_touch_gpio_init(){
         xTaskCreate(gpio_task_example, "gpio_task_example", 2048, NULL, 10, NULL);
 
         //install gpio isr service
+        /*
+		安装了ESP32芯片的GPIO中断服务 它将初始化并启用中断处理机制，使得可以使用GPIO中断功能
+		ESP_INTR_FLAG_DEFAULT是一个标志参数，表示使用默认的中断配置选项
+		*/
         gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);  // 配置GPIO中断
         //hook isr handler for specific gpio pin
+        /*
+		将指定的中断处理函数gpio_isr_handler添加到GPIO输入引脚上的中断处理函数列表中
+		当GPIO输入引脚触发中断时，将调用该中断处理函数来处理中断事件
+		GPIO_INTPUT_IO_0是GPIO输入引脚的编号。gpio_isr_handler是中断处理函数的名称。
+		(void*)GPIO_INTPUT_IO_0将GPIO输入引脚的编号转换为void*类型的参数
+		然后传递给中断处理函数。这允许在中断处理函数中获取和使用引脚编号信息
+		*/
         gpio_isr_handler_add(GPIO_INPUT_IO_0, gpio_isr_handler, (void*) GPIO_INPUT_IO_0); // 配置GPIO中断后需要调用此函数添加对应的GPIO中断服务
     }
     has_init_isr = true;

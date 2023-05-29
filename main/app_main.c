@@ -181,12 +181,12 @@ static void background_task(void* arg)
         if(apsta_close_count > 0){
             apsta_close_count --;
             if(apsta_close_count == 0){
-                ds_wifi_send_event(AP_STA_STOP);
+                ds_wifi_send_event(AP_STA_STOP);   // 倒计时计数器减到0时 调用WIFI事件发送函数关闭AP和STA模式
                 vTaskDelay(1000 / portTICK_PERIOD_MS);
-                set_update_httpdata_request(false);
+                set_update_httpdata_request(false); // 设置首次更新标志位为否
             }
         }
-        //设置页面 开启AP&STA
+        // 如果屏幕处于设置页面 且没有AP和STA模式没有打开 就调用WIFI事件发送函数启动它们
         if(ds_ui_get_now_show_page() == PAGE_TYPE_SETTING){
             if(get_is_ap_sta_open() == false){
                 ds_wifi_send_event(AP_STA_START);

@@ -41,12 +41,6 @@ static void scan_ft6336()
 				gTPS.x[i]=((uint16_t)(buf[0]&0X0F)<<8)+buf[1];
 				gTPS.y[i]=((uint16_t)(buf[2]&0X0F)<<8)+buf[3];
                 // printf("%x %x %x %x x=%d y=%d\n",buf[0],buf[1],buf[2],buf[3],gTPS.x[i],gTPS.y[i]);
- 				// if((buf[0]&0XC0)!=0X80)
- 				// {
-				// 	gTPS.x[i]=gTPS.y[i]=0;//必须是contact事件，才认为有效	
-				// 	gTPS.touch_sta &=0xe0;	//清除触摸点有效标记
-				// 	return;
-				// }
  			}
  		}
  		gTPS.touch_sta |= TP_PRES_DOWN;     //触摸按下标记

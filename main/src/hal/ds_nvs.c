@@ -104,17 +104,22 @@ void ds_nvs_save_city(char * city){
 char * ds_nvs_read_city(){
     esp_err_t err;
     nvs_handle_t nvs_handle;
+    // 通过给定命名空间，从默认NVS分区中打开指定NVS存储区域
+    // 参数 ---------- 命名空间-------打开方式-------返回句柄
     err = nvs_open("cityconfig", NVS_READWRITE, &nvs_handle);
     if (err != ESP_OK) {
         ESP_LOGI(TAG,"Error (%s) opening NVS handle!\n", esp_err_to_name(err));
         return NULL;
     }
     size_t city_len;
+    // 通过给定密钥获取字符串值，成功获取则返回ESP_OK
+    // 参数 从nvs_open获得的句柄--密钥名称--指向输出值的指针--指向保存out_value长度变量的非零指针
     if ( (err = nvs_get_str(nvs_handle,  "city", NULL, &city_len)) == ESP_OK) {
         char *city = (char *)malloc(city_len);
+        // 通过给定密钥获取字符串值，成功获取则返回ESP_OK
         if ( (err = nvs_get_str(nvs_handle, "city", city, &city_len)) == ESP_OK) {
             printf("city = %s\n", city);
-            nvs_close(nvs_handle);
+            nvs_close(nvs_handle); // 关闭NVS
             return city;
         }
     }
