@@ -149,19 +149,19 @@ void ds_screen_gpio_init(){
     //disable pull-up mode
     io_conf.pull_up_en = 0;
     //configure GPIO with the given settings
-    gpio_config(&io_conf);
+    gpio_config(&io_conf); //初始化片选
 
     //bit mask of the pins that you want to set,e.g.GPIO18/19
     io_conf.pin_bit_mask = SCREEN_GPIO_OUTPUT_DC_SEL;
     //configure GPIO with the given settings
-    gpio_config(&io_conf);
+    gpio_config(&io_conf); //初始化D/C
 
     //bit mask of the pins that you want to set,e.g.GPIO18/19
     io_conf.pin_bit_mask = SCREEN_GPIO_OUTPUT_RES_SEL;
     //configure GPIO with the given settings
-    gpio_config(&io_conf);
+    gpio_config(&io_conf); //复位
 
-    io_conf.intr_type = GPIO_INTR_NEGEDGE;
+    io_conf.intr_type = GPIO_INTR_NEGEDGE; // 下降沿触发
     //bit mask of the pins, use GPIO4/5 here
     io_conf.pin_bit_mask = SCREEN_GPIO_INTPUT_BUSY_SEL;
     //set as input mode    
@@ -169,13 +169,6 @@ void ds_screen_gpio_init(){
     //enable pull-up mode
     io_conf.pull_up_en = 1;
     gpio_config(&io_conf);
-    //change gpio intrrupt type for one pin
-    // gpio_set_intr_type(SCREEN_GPIO_INTPUT_BUSY, GPIO_INTR_NEGEDGE);
-
-    // //install gpio isr service
-    // gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
-    // //hook isr handler for specific gpio pin
-    // gpio_isr_handler_add(SCREEN_GPIO_INTPUT_BUSY, gpio_isr_handler, (void*) SCREEN_GPIO_INTPUT_BUSY);
 }
 
 void ds_gpio_init(){

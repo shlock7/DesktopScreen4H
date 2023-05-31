@@ -20,11 +20,6 @@
 
 #define DMA_CHAN    2
 
-// #define PIN_NUM_MISO 0
-// #define PIN_NUM_MOSI 5
-// #define PIN_NUM_CLK  25
-// #define PIN_NUM_CS   27
-
 #define PIN_NUM_MISO 23
 #define PIN_NUM_MOSI 26
 #define PIN_NUM_CLK  25
@@ -38,17 +33,16 @@ spi_device_handle_t spi;
 
 void spi_send_cmd(const uint8_t cmd)
 {
-    esp_err_t ret;
+    esp_err_t ret;              // 保存函数返回的错误代码
     spi_transaction_t t;
-    ds_gpio_set_screen_dc(0);
-    ds_gpio_set_screen_cs(0);
-    memset(&t, 0, sizeof(t));       //Zero out the transaction
-    // t.flags=SPI_TRANS_USE_TXDATA;
-    t.length=8;                     //Command is 8 bits
-    t.tx_buffer=&cmd;               //The data is the cmd itself
-    t.user=(void*)0;                //D/C needs to be set to 0
-    ret=spi_device_polling_transmit(spi, &t);  //Transmit!
-    ds_gpio_set_screen_cs(1);
+    ds_gpio_set_screen_dc(0);   // 将 D/C（数据/命令）引脚的电平设置为低电平
+    ds_gpio_set_screen_cs(0);   // 将 CS（片选）引脚的电平设置为低电平
+    memset(&t, 0, sizeof(t));   // Zero out the transaction
+    t.length=8;                 // 表示传输的命令是8位（一个字节）长
+    t.tx_buffer=&cmd;           // The data is the cmd itself
+    t.user=(void*)0;            // 传输命令时将 D/C（数据/命令）引脚设置为低电平
+    ret=spi_device_polling_transmit(spi, &t);  // 执行传输
+    ds_gpio_set_screen_cs(1);   // 将 CS（片选）引脚的电平设置为高电平
     assert(ret==ESP_OK);            //Should have had no issues.
 }
 
@@ -59,8 +53,8 @@ void spi_send_data(const uint8_t data)
     ds_gpio_set_screen_dc(1);
     ds_gpio_set_screen_cs(0);
     memset(&t, 0, sizeof(t));       //Zero out the transaction
-    t.length=8;                 //Len is in bytes, transaction length is in bits.
-    t.tx_buffer=&data;               //Data
+    t.length=8;                     //Len is in bytes, transaction length is in bits.
+    t.tx_buffer=&data;              //Data
     t.user=(void*)1;                //D/C needs to be set to 1
     ret=spi_device_polling_transmit(spi, &t);  //Transmit!
     ds_gpio_set_screen_cs(1);
@@ -83,16 +77,15 @@ void screen_spi_init(void)
         .miso_io_num = PIN_NUM_MISO,                // MISO信号线
         .mosi_io_num = PIN_NUM_MOSI,                // MOSI信号线
         .sclk_io_num = PIN_NUM_CLK,                 // SCLK信号线
-        .quadwp_io_num = -1,                        // WP信号线，专用于QSPI的D2
+        .quadwp_io_num = -1,                        // WP信号线，专用于QSPI的D2,-1表示不使用
         .quadhd_io_num = -1,                        // HD信号线，专用于QSPI的D3
         .max_transfer_sz = 64*8,                    // 最大传输数据大小
-
     };
     spi_device_interface_config_t devcfg={
-        .clock_speed_hz=15*1000*1000,            //Clock out at 26 MHz
+        .clock_speed_hz=15*1000*1000,           // 时钟速度 Clock out at 26 MHz
         .mode=0,                                //SPI mode 0
         .queue_size=7,                          //We want to be able to queue 7 transactions at a time
-        // .pre_cb=spi_pre_transfer_callback,  //Specify pre-transfer callback to handle D/C line
+        // .pre_cb=spi_pre_transfer_callback,   //Specify pre-transfer callback to handle D/C line
     };
     //Initialize the SPI bus
     ret=spi_bus_initialize(HSPI_HOST, &buscfg, 0);
@@ -100,21 +93,10 @@ void screen_spi_init(void)
     //Attach the LCD to the SPI bus
     ret=spi_bus_add_device(HSPI_HOST, &devcfg, &spi);
     ESP_ERROR_CHECK(ret);
-    
 }
 
 void screen_spi_test(){
     spi_send_cmd(0x55);
     vTaskDelay(10 / portTICK_PERIOD_MS);
     spi_send_data(0x55);
-    // ds_gpio_set_screen_rst(0);		// Module reset
-	// vTaskDelay(10 / portTICK_PERIOD_MS);
-	// ds_gpio_set_screen_rst(1);
-	// vTaskDelay(10 / portTICK_PERIOD_MS);
-
-    // ds_gpio_set_screen_dc(0);		// Module reset
-	// vTaskDelay(10 / portTICK_PERIOD_MS);
-	// ds_gpio_set_screen_dc(1);
-	// vTaskDelay(10 / portTICK_PERIOD_MS);
-    // printf("ds_gpio_get_screen_busy() %d\n",ds_gpio_get_screen_busy());
 }

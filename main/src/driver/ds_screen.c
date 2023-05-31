@@ -21,7 +21,7 @@ static void lcd_chkstatus(void)
 	while(1)
 	{
 		busy = ds_gpio_get_screen_busy();
-		busy = (busy & 0x01);        
+		busy = (busy & 0x01);   // 只保留最低位
 		//=1 BUSY
 		if(busy==0) 
 			break;
@@ -29,47 +29,47 @@ static void lcd_chkstatus(void)
 		count ++;
 		if(count >= 1000){
 			printf("---------------time out ---\n");
-			break;                  
+			break;
 		}
-	}                    
-}		
+	}
+}
 
 static void init_display(){
 	vTaskDelay(10 / portTICK_PERIOD_MS);
-    ds_gpio_set_screen_rst(0);		// Module reset
+    ds_gpio_set_screen_rst(0);		// 将屏幕的复位引脚置为低电平，进行模块复位操作
 	vTaskDelay(10 / portTICK_PERIOD_MS);
-	ds_gpio_set_screen_rst(1);
+	ds_gpio_set_screen_rst(1);		// 将液晶屏的复位引脚置为高电平，结束模块复位
 	vTaskDelay(100 / portTICK_PERIOD_MS);
 
-	lcd_chkstatus();   
-	spi_send_cmd(0x12);  //SWRESET
-	lcd_chkstatus();   
+	lcd_chkstatus();     // 检查屏幕状态，确保屏幕准备就绪
+	spi_send_cmd(0x12);  // SWRESET 软件复位
+	lcd_chkstatus();   	 // 再次检查
 		
-	spi_send_cmd(0x01); //Driver output control      
-	spi_send_data(0xC7);
+	spi_send_cmd(0x01);  // 设置驱动器输出控制      
+	spi_send_data(0xC7); // 配置驱动器输出控制的参数
 	spi_send_data(0x00);
 	spi_send_data(0x01);
 
-	spi_send_cmd(0x11); //data entry mode       
-	spi_send_data(0x01);
+	spi_send_cmd(0x11);	 // 设置数据输入模式
+	spi_send_data(0x01); // x方向递增，y方向递减
 
-	spi_send_cmd(0x44); //set Ram-X address start/end position   
+	spi_send_cmd(0x44);  // 设置RAM-X地址的起始和结束位置
 	spi_send_data(0x00);
-	spi_send_data(0x18);    //0x0C-->(18+1)*8=200
+	spi_send_data(0x18); // 0x0C-->(18+1)*8=200
 
-	spi_send_cmd(0x45); //set Ram-Y address start/end position          
-	spi_send_data(0xC7);    //0xC7-->(199+1)=200
+	spi_send_cmd(0x45);  // 设置RAM-Y地址的起始和结束位置
+	spi_send_data(0xC7); // 0xC7-->(199+1)=200
 	spi_send_data(0x00);
 	spi_send_data(0x00);
 	spi_send_data(0x00); 
 
-	spi_send_cmd(0x3C); //BorderWavefrom
+	spi_send_cmd(0x3C);  // 配置边界波形
 	spi_send_data(0x05);	
 	  	
-  	spi_send_cmd(0x18); //Read built-in temperature sensor
+  	spi_send_cmd(0x18);  // 读取内置温度传感器
 	spi_send_data(0x80);	
 
-	spi_send_cmd(0x4E);   // set RAM x address count to 0;
+	spi_send_cmd(0x4E);   // 将RAM X地址计数器设置为0
 	spi_send_data(0x00);
 	spi_send_cmd(0x4F);   // set RAM y address count to 0X199;    
 	spi_send_data(0xC7);
@@ -112,9 +112,7 @@ static void ds_screen_display_white(void){
 	for(k=0;k<250;k++)
 	{
 		for(i=0;i<25;i++)
-		{
-		spi_send_data(0xff);
-		}
+			spi_send_data(0xff);
 	}		
 }
 
@@ -135,28 +133,35 @@ void ds_screen_full_display_data(const uint8_t *data){
 void ds_screen_full_display(void pic_display(void)){
 	init_display();
 	pic_display(); 				//picture
-	refresh();														//EPD_refresh		
+	refresh();					//EPD_refresh		
 	deep_sleep();
 }
 
 //全刷 带数据
 void ds_screen_full_display_bydata(void display_func(const uint8_t *data),const uint8_t *data){
 	init_display();
-	display_func(data); 				//picture
-	refresh();														//EPD_refresh		
+	display_func(data); 		//picture
+	refresh();					//EPD_refresh		
 	deep_sleep();	
 }
 
 //局部刷 不带数据
+/*
+	x_start：	 部分显示的起始 x 坐标
+	y_start：	 部分显示的起始 y 坐标
+	partial_new：函数指针，该函数用于生成部分显示的内容
+	PART_COLUMN：部分显示的列数
+	PART_LINE：  部分显示的行数
+*/
 void ds_screen_partial_display(unsigned int x_start,unsigned int y_start,void partial_new(void),unsigned int PART_COLUMN,unsigned int PART_LINE){
     unsigned int i;  
     unsigned int x_end,y_start1,y_start2,y_end1,y_end2;
-    x_start=x_start/8;
+    x_start=x_start/8;			// 将 x 坐标转换为以字节为单位的坐标
     x_end=x_start+PART_LINE/8-1; 
     
     y_start1=0;
-    y_start2=200 - y_start;
-    if(y_start>=256)
+    y_start2=200 - y_start; // 上下反转
+    if(y_start>=256)		// 检查是否需要进行高字节和低字节的分离
     {
         y_start1=y_start2/256;
         y_start2=y_start2%256;
@@ -166,34 +171,34 @@ void ds_screen_partial_display(unsigned int x_start,unsigned int y_start,void pa
     if(y_end2>=256)
     {
         y_end1=y_end2/256;
-        y_end2=y_end2%256;      
-    } 
+        y_end2=y_end2%256;
+    }
 
 	// Add hardware reset to prevent background color change
     ds_gpio_set_screen_rst(0);		// Module reset
 	vTaskDelay(10 / portTICK_PERIOD_MS);
 	ds_gpio_set_screen_rst(1);
 	vTaskDelay(10 / portTICK_PERIOD_MS);
-	//Lock the border to prevent flashing
+	// 锁定边框，防止闪烁
 	spi_send_cmd(0x3C); //BorderWavefrom,
-	spi_send_data(0x80);	
+	spi_send_data(0x80);
 	
-	spi_send_cmd(0x44);       // set RAM x address start/end, in page 35
-	spi_send_data(x_start);    // RAM x address start at 00h;
-	spi_send_data(x_end);    // RAM x address end at 0fh(15+1)*8->128 
-	spi_send_cmd(0x45);       // set RAM y address start/end, in page 35
-	spi_send_data(y_start2);    // RAM y address start at 0127h;
-	spi_send_data(y_start1);    // RAM y address start at 0127h;
-	spi_send_data(y_end2);    // RAM y address end at 00h;
-	spi_send_data(y_end1);    // ????=0	
+	spi_send_cmd(0x44);       	// set RAM x address start/end, in page 35
+	spi_send_data(x_start);    	// RAM x address start at 00h;
+	spi_send_data(x_end);    	// RAM x address end at 0fh(15+1)*8->128 
+	spi_send_cmd(0x45);       	// set RAM y address start/end, in page 35
+	spi_send_data(y_start2);    // RAM y 地址的起始位置的低字节
+	spi_send_data(y_start1);    // RAM y 地址的起始位置的高字节
+	spi_send_data(y_end2);    	// RAM y 地址的结束位置的低字节
+	spi_send_data(y_end1);    	// RAM y 地址的结束位置的高字节
 
-	spi_send_cmd(0x4E);   // set RAM x address count to 0;
+	spi_send_cmd(0x4E);   		// set RAM x address count to 0;
 	spi_send_data(x_start); 
-	spi_send_cmd(0x4F);   // set RAM y address count to 0X127;    
+	spi_send_cmd(0x4F);   		// set RAM y address count to 0X127;
 	spi_send_data(y_start2);
 	spi_send_data(y_start1);
 	
-	spi_send_cmd(0x24);   //Write Black and White image to RAM
+	spi_send_cmd(0x24);   		// 写入图像数据到 RAM
 	partial_new();
 
 	refresh_part();
@@ -208,12 +213,12 @@ void ds_screen_partial_display_bydata(unsigned int x_start,unsigned int y_start,
 	
     unsigned int i;  
     unsigned int x_end,y_start1,y_start2,y_end1,y_end2;
-    x_start=x_start/8;
+    x_start=x_start/8;			// 将 x 坐标转换为以字节为单位的坐标
     x_end=x_start+PART_LINE/8-1; 
     
     y_start1=0;
-    y_start2= 200 - y_start;
-    if(y_start>=256)
+    y_start2= 200 - y_start; // 上下反转
+    if(y_start>=256)		// 检查是否需要进行高字节和低字节的分离
     {
         y_start1=y_start2/256;
         y_start2=y_start2%256;
@@ -223,38 +228,39 @@ void ds_screen_partial_display_bydata(unsigned int x_start,unsigned int y_start,
     if(y_end2>=256)
     {
         y_end1=y_end2/256;
-        y_end2=y_end2%256;      
-    } 		
+        y_end2=y_end2%256;
+    }
 	// Add hardware reset to prevent background color change
     ds_gpio_set_screen_rst(0);		// Module reset
 	vTaskDelay(10 / portTICK_PERIOD_MS);
 	ds_gpio_set_screen_rst(1);
 	vTaskDelay(10 / portTICK_PERIOD_MS);
-	//Lock the border to prevent flashing
+	// 锁定边框，防止闪烁
 	spi_send_cmd(0x3C); //BorderWavefrom,
-	spi_send_data(0x80);	
+	spi_send_data(0x80);
 	
-	spi_send_cmd(0x44);       // set RAM x address start/end, in page 35
-	spi_send_data(x_start);    // RAM x address start at 00h;
-	spi_send_data(x_end);    // RAM x address end at 0fh(15+1)*8->128 
-	spi_send_cmd(0x45);       // set RAM y address start/end, in page 35
-	spi_send_data(y_start2);    // RAM y address start at 0127h;
-	spi_send_data(y_start1);    // RAM y address start at 0127h;
-	spi_send_data(y_end2);    // RAM y address end at 00h;
-	spi_send_data(y_end1);    // ????=0	
+	spi_send_cmd(0x44);       	// set RAM x address start/end, in page 35
+	spi_send_data(x_start);    	// RAM x address start at 00h;
+	spi_send_data(x_end);    	// RAM x address end at 0fh(15+1)*8->128 
+	spi_send_cmd(0x45);       	// set RAM y address start/end, in page 35
+	spi_send_data(y_start2);    // RAM y 地址的起始位置的低字节
+	spi_send_data(y_start1);    // RAM y 地址的起始位置的高字节
+	spi_send_data(y_end2);    	// RAM y 地址的结束位置的低字节
+	spi_send_data(y_end1);    	// RAM y 地址的结束位置的高字节
 
-	spi_send_cmd(0x4E);   // set RAM x address count to 0;
+	spi_send_cmd(0x4E);   		// set RAM x address count to 0;
 	spi_send_data(x_start); 
-	spi_send_cmd(0x4F);   // set RAM y address count to 0X127;    
+	spi_send_cmd(0x4F);   		// set RAM y address count to 0X127;
 	spi_send_data(y_start2);
 	spi_send_data(y_start1);
 	
-	spi_send_cmd(0x24);   //Write Black and White image to RAM
+	spi_send_cmd(0x24);   		// 写入图像数据到 RAM
 	partial_new(new_data);
 
 
 }
 
+// 每个元素都是一个字节，用于存储屏幕的像素数据
 uint8_t partial_data[200][25];
 uint8_t partial_data_array[5000];
 
@@ -272,11 +278,11 @@ void ds_screen_partial_data_add(unsigned int x_start,unsigned int x_end,unsigned
 	uint8_t x_data_location = x_start/8;
 	uint8_t x_size = x_len/8;
 	int data_index = 0;
-	// int move = x_start % 8;
+	// 检查起始 x 坐标是否需要向右偏移一个字节
 	if(x_start % 8 != 0){
 		x_data_location ++;
 	}
-	if(x_len % 8 != 0){
+	if(x_len % 8 != 0){ // 检查部分数据的宽度是否需要向上取整到下一个字节
 		x_size ++;
 	}
 	for(int x_index = y_start ;x_index < y_end;x_index ++){
@@ -293,11 +299,11 @@ static void ds_screen_display_data(void){
 	spi_send_cmd(0x24);
 	for(i=0;i<5000;i++){
 		spi_send_data(partial_data_array[i]);  
-	}  	 
+	}
 	spi_send_cmd(0x26);
 	for(i=0;i<5000;i++){
 		spi_send_data(partial_data_array[i]);  
-	}  	 		
+	}
 }
 
 //局刷数据-复制
