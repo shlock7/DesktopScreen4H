@@ -26,12 +26,12 @@ esp_err_t init_spiffs(void)
     ESP_LOGI(TAG, "Initializing SPIFFS");
 
     esp_vfs_spiffs_conf_t conf = {
-      .base_path = "/spiffs",
-      .partition_label = NULL,
-      .max_files = 5,   // This decides the maximum number of files that can be created on the storage
-      .format_if_mount_failed = true
+      .base_path = "/spiffs",           // 根目录
+      .partition_label = NULL,          // 分区标签，指针类型
+      .max_files = 5,                   // 该目录下能存储的最大文件数目
+      .format_if_mount_failed = true    //如果挂载失败则会重启
     };
-
+    // 挂载spiffs文件，挂载之后可以使用C库进行读写文件
     esp_err_t ret = esp_vfs_spiffs_register(&conf);
     if (ret != ESP_OK) {
         if (ret == ESP_FAIL) {
@@ -54,11 +54,11 @@ esp_err_t init_spiffs(void)
 
     ESP_LOGI(TAG, "Partition size: total: %d, used: %d", total, used);
 
-        // Check consistency of reported partiton size info.
+    // 检查分区大小信息
     if (used > total) {
         ESP_LOGW(TAG, "Number of used bytes cannot be larger than total. Performing SPIFFS_check().");
         ret = esp_spiffs_check(conf.partition_label);
-        // Could be also used to mend broken files, to clean unreferenced pages, etc.
+        //  也可以用来修复损坏的文件，清理未引用的页面等。
         // More info at https://github.com/pellepl/spiffs/wiki/FAQ#powerlosses-contd-when-should-i-run-spiffs_check
         if (ret != ESP_OK) {
             ESP_LOGE(TAG, "SPIFFS_check() failed (%s)", esp_err_to_name(ret));
