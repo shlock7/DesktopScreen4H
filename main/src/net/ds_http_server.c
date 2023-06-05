@@ -56,8 +56,9 @@ struct file_server_data {
 
 static const char *TAG = "file_server";
 
-/* Handler to redirect incoming GET request for /index.html to /
- * This can be overridden by uploading file with same name */
+/* 当接收到针对 /index.html 的 GET 请求时，将重定向到根路径 /
+ * 设置响应的状态码为 "307 Temporary Redirect"，
+ * 设置响应头的 "Location" 字段为根路径，并发送响应给客户端 */
 static esp_err_t index_html_get_handler(httpd_req_t *req)
 {
     httpd_resp_set_status(req, "307 Temporary Redirect");
@@ -67,8 +68,8 @@ static esp_err_t index_html_get_handler(httpd_req_t *req)
 }
 
 /* Handler to respond with an icon file embedded in flash.
- * Browsers expect to GET website icon at URI /favicon.ico.
- * This can be overridden by uploading file with same name */
+ * 当接收到对 /favicon.ico 的 GET 请求时，将返回嵌入在闪存中的网站图标文件
+ * 它会设置响应的内容类型为 "image/x-icon"，并发送包含图标数据的响应给客户端 */
 static esp_err_t favicon_get_handler(httpd_req_t *req)
 {
     extern const unsigned char favicon_ico_start[] asm("_binary_favicon_ico_start");
@@ -85,12 +86,12 @@ static esp_err_t favicon_get_handler(httpd_req_t *req)
  * string other than '/', since SPIFFS doesn't support directories */
 static esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath)
 {
-    char entrypath[FILE_PATH_MAX];
-    char entrysize[16];
-    const char *entrytype;
+    char entrypath[FILE_PATH_MAX]; // 用于存储文件或目录的完整路径，由目录路径 dirpath 和文件名或目录名拼接而成
+    char entrysize[16];            // 用于存储文件或目录的大小 在 HTML 页面的文件列表中，该变量的值将作为文件大小的字符串显示
+    const char *entrytype;         // 指向一个字符数组，表示文件或目录的类型 在 HTML 页面的文件列表中，该变量的值将作为文件类型的字符串显示
 
-    struct dirent *entry;
-    struct stat entry_stat;
+    struct dirent *entry;          // 用于迭代目录中的文件和目录条目
+    struct stat entry_stat;        // 用于存储通过 stat 函数获取的文件或目录的详细信息，例如大小、修改时间等
 
     DIR *dir = opendir(dirpath);
     const size_t dirpath_len = strlen(dirpath);
@@ -105,7 +106,8 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath)
         return ESP_FAIL;
     }
 
-    /* Send HTML file header */
+    /* 向 HTTP 响应中发送一个 HTML 页面的开头标记
+       通过发送这行代码，告诉客户端接收到的响应是一个 HTML 页面，并且将在浏览器中正确解析和显示*/
     httpd_resp_sendstr_chunk(req, "<!DOCTYPE html><html><body>");
 
     /* Get handle to embedded file upload script */
@@ -113,7 +115,8 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath)
     extern const unsigned char upload_script_end[]   asm("_binary_setting_html_end");
     const size_t upload_script_size = (upload_script_end - upload_script_start);
 
-    /* Add file upload form and script which on execution sends a POST request to /upload */
+    /* 添加文件上传表单和脚本，在执行时将 POST 请求发送到 /upload 
+     * 将嵌入式文件上传脚本的内容发送到 HTTP 响应中 在客户端访问特定的 rul 时，将接收到包含文件上传表单和脚本的 HTML 页面*/
     httpd_resp_send_chunk(req, (const char *)upload_script_start, upload_script_size);
 
     /* Send file-list table definition and column labels */
@@ -122,7 +125,8 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath)
     //     "<col width=\"800px\" /><col width=\"300px\" /><col width=\"300px\" /><col width=\"100px\" />"
     //     "<thead><tr><th>Name</th><th>Type</th><th>Size (Bytes)</th><th>Delete</th></tr></thead>"
     //     "<tbody>");
-
+    
+    // 生成一个包含目录中文件列表的 HTML 页面，并将其作为 HTTP 响应发送给客户端
     /* Iterate over all files / folders and fetch their names and sizes */
     while ((entry = readdir(dir)) != NULL) {
         entrytype = (entry->d_type == DT_DIR ? "directory" : "file");
