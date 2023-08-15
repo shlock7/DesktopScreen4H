@@ -67,14 +67,16 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
 
 static void ds_wifi_ap_sta_start(void)
 {
+    // 创建默认的 WiFi Station 和 Access Point 网络接口
     sta = esp_netif_create_default_wifi_sta();
     ap = esp_netif_create_default_wifi_ap();
-
+    // 使用默认配置初始化 WiFi 栈
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+    // 注册 WiFi 事件处理函数，处理 STA 和 AP 相关事件
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, wifi_event_handler, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, wifi_event_handler, NULL));
-    ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_APSTA) );
+    ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_APSTA) ); // 设置 WiFi 模式为 STA + AP 模式
     wifi_config_t sta_config = {
         .sta = {
             .ssid = CONFIG_ESP_WIFI_SSID,
@@ -92,7 +94,7 @@ static void ds_wifi_ap_sta_start(void)
         memcpy(sta_config.sta.ssid,get_system_data().setting_ssid,32);
         memcpy(sta_config.sta.password,get_system_data().setting_psw,64);
     }
-
+    // 配置 WiFi Access Point
     wifi_config_t ap_config = {
         .ap = {
             .ssid = CONFIG_ESP_AP_WIFI_SSID,
@@ -103,9 +105,10 @@ static void ds_wifi_ap_sta_start(void)
             .authmode = WIFI_AUTH_OPEN
         },
     };
+    // // 设置 WiFi Station 和 Access Point 的配置
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &sta_config));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap_config));
-    ESP_ERROR_CHECK(esp_wifi_start());
+    ESP_ERROR_CHECK(esp_wifi_start()); // 启动 WiFi
 }
 
 static void ds_wifi_ap_sta_update_info(){
@@ -125,7 +128,7 @@ static void ds_wifi_ap_sta_update_info(){
         memcpy(sta_config.sta.ssid,get_system_data().setting_ssid,32);
         memcpy(sta_config.sta.password,get_system_data().setting_psw,64);
     }
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &sta_config));
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &sta_config)); // 使用新的配置更新 WiFi Station
 }
 
 static void ds_wifi_ap_sta_stop(void){
@@ -144,7 +147,7 @@ static void wifi_net_task(void* arg)
     // dns_server_start();
     // web_server_start();
     for(;;) {
-        WIFI_SET_EVENT_E evt;
+        WIFI_SET_EVENT_E evt;   // 接收从 wifi_event_queue 队列中接收到的 WiFi 设置事件
         xQueueReceive(wifi_event_queue, &evt, portMAX_DELAY);
         printf("get wifi set event %d\n",evt);
         switch (evt)
@@ -175,6 +178,6 @@ void ds_wifi_send_event(WIFI_SET_EVENT_E event){
 }
 
 void ds_wifi_ap_sta_init(){
-    wifi_event_queue = xQueueCreate(10, sizeof(WIFI_SET_EVENT_E));
+    wifi_event_queue = xQueueCreate(10, sizeof(WIFI_SET_EVENT_E));     // 用于在 WiFi 网络任务中传递 WiFi 设置事件
     xTaskCreate(wifi_net_task, "wifi_net_task", 4096, NULL, 10, NULL);    
 }
