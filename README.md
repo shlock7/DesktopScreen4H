@@ -1,5 +1,39 @@
 
+
+## 
+
+## 电路图
+
+![image](https://github.com/Nero-iwnl/DesktopScreen4H/blob/main/images/dianlu.png)
+
+## 触控逻辑
+
+![image](https://github.com/Nero-iwnl/DesktopScreen4H/blob/main/images/touch_logi.png)
+
+## 主页
+
+![image](https://github.com/Nero-iwnl/DesktopScreen4H/blob/main/images/homepage.jpg)
+
+## 时钟
+
+![image](https://github.com/Nero-iwnl/DesktopScreen4H/blob/main/images/oclock.jpg)
+
+## 天气
+
+![image](https://github.com/Nero-iwnl/DesktopScreen4H/blob/main/images/weather.jpg)
+
+
+
+![image](https://github.com/Nero-iwnl/DesktopScreen4H/blob/main/images/id_pic.jpg)
+
+
+
+
+
+
+
 ## 配置环境
+
 get_idf
 
 ## 配置 
